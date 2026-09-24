@@ -19,9 +19,7 @@ public class TelaPrincipal extends JFrame{
     private JLabel lblImagemPDF;
     private JLabel lblNomeArquivo;
     private JLabel lblQtdTotal;
-    private JLabel lblQtdBipada;
     private JLabel lblStatus;
-    private JButton btnContarBorda;
 
 
     // variaveis de controle das peças atuais
@@ -92,21 +90,13 @@ public class TelaPrincipal extends JFrame{
         lblQtdTotal = new JLabel("Bordas a passar: 0");
         lblQtdTotal.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblQtdTotal.setForeground(new Color(0, 102, 204)); // Azul profissional
-        lblQtdBipada = new JLabel("Bordas passadas: 0");
-        lblQtdBipada.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
-        btnContarBorda = new JButton("Passar Borda (+1)");
-        btnContarBorda.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        btnContarBorda.setEnabled(false);
         painelLateral.add(lblTituloLateral);
         painelLateral.add(Box.createVerticalStrut(15));
         painelLateral.add(lblNomeArquivo);
         painelLateral.add(Box.createVerticalStrut(15));
         painelLateral.add(lblQtdTotal);
         painelLateral.add(Box.createVerticalStrut(10));
-        painelLateral.add(lblQtdBipada);
-        painelLateral.add(Box.createVerticalStrut(25));
-        painelLateral.add(btnContarBorda);
         add(painelLateral, BorderLayout.EAST);
 
 
@@ -114,8 +104,6 @@ public class TelaPrincipal extends JFrame{
         // O leitor de código de barras dispara um ENTER ao final da leitura:
         txtCodigo.addActionListener(e -> processarBipagem());
 
-        // Ação ao clicar no botão de passar borda
-        btnContarBorda.addActionListener(e -> registrarPassagemBorda());
     }
 
 
@@ -124,6 +112,7 @@ public class TelaPrincipal extends JFrame{
      */
     private void processarBipagem() {
         String codigo = txtCodigo.getText().trim();
+
 
         if (codigo.isEmpty()) {
             return;
@@ -150,22 +139,35 @@ public class TelaPrincipal extends JFrame{
             lblImagemPDF.setText(""); // Limpa o texto "Nenhum PDF carregado"
             lblImagemPDF.setIcon(new ImageIcon(img));
 
-            // Extrai a quantidade de bordas do próprio PDF
-            totalBordas = PdfService.mostrarBordas(arquivo);
-            bordasBipadas = 1; // Primeira passagem da peça
+            Dados dados = DbManager.buscarDados(codigo);
+
+            if(dados != null){
+                // Extrai a quantidade de bordas do banco de dados
+                totalBordas = dados.qtdBordaTotal(); // Pega do DB a quantidade de borda total 
+                System.out.println("Desenho do banco.");
+            }
+            else{
+                // Extrai a quantidade de bordas do próprio PDF
+                totalBordas = PdfService.mostrarBordas(arquivo);
+                bordasBipadas = 1; // Primeira passagem da peça
+
+                lblStatus.setText("Nova peça registrada!");
+                lblStatus.setForeground(new Color(34, 139, 34)); // Verde
+                System.out.println("Desenho do PDF.");
+
+                // Salva o registro da bipagem no SQLite
+                salvarHistoricoNoBanco(codigo);
+            }
 
             // Atualiza os textos da tela
             lblNomeArquivo.setText("Arquivo: " + arquivo.getName());
             lblQtdTotal.setText("Bordas a passar: " + totalBordas);
-            lblQtdBipada.setText("Bordas passadas: " + bordasBipadas);
-            btnContarBorda.setEnabled(true);
+
             lblStatus.setText("Peça carregada com sucesso!");
             lblStatus.setForeground(new Color(34, 139, 34));
 
-            // Salva o registro da bipagem no SQLite
-            salvarHistoricoNoBanco(codigo);
-
         } 
+        
         catch (IOException ex) {
             lblStatus.setText("Erro ao renderizar PDF: " + ex.getMessage());
             lblStatus.setForeground(Color.RED);
@@ -174,25 +176,6 @@ public class TelaPrincipal extends JFrame{
             // Limpa e foca no campo para a próxima bipagem
             txtCodigo.setText("");
             txtCodigo.requestFocusInWindow();
-        }
-    }
-
-    /**
-     * BLOCO Incrementa a quantidade de bordas passadas
-     */
-    private void registrarPassagemBorda() {
-        if (arquivo == null) return;
-        bordasBipadas++;
-        lblQtdBipada.setText("Bordas passadas: " + bordasBipadas);
-
-        // Atualiza o registro no banco com a nova quantidade
-        String codigo = arquivo.getName().replace(".pdf", "");
-        salvarHistoricoNoBanco(codigo);
-
-        if (bordasBipadas >= totalBordas) {
-            lblStatus.setText("Peça 100% finalizada!");
-            lblStatus.setForeground(new Color(34, 139, 34));
-            btnContarBorda.setEnabled(false);
         }
     }
 
