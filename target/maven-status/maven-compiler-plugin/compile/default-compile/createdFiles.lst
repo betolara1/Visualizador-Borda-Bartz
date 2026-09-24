@@ -1,0 +1,5 @@
+com\bartz\database\DbManager.class
+com\bartz\service\PdfService.class
+com\bartz\ui\TelaPrincipal.class
+com\bartz\model\Dados.class
+com\bartz\Main.class
