@@ -1,5 +1,6 @@
 package com.bartz.ui;
 
+import com.bartz.config.ApiConsumer;
 import com.bartz.database.DbManager;
 import com.bartz.model.Dados;
 import com.bartz.service.PdfService;
@@ -111,7 +112,8 @@ public class TelaPrincipal extends JFrame{
      * BLOCO Processa o código digitado ou bipado pelo leitor
      */
     private void processarBipagem() {
-        String codigo = txtCodigo.getText().trim();
+        String codigo = txtCodigo.getText().trim().toUpperCase();
+        String codigoDesenho = null;
 
 
         if (codigo.isEmpty()) {
@@ -121,8 +123,26 @@ public class TelaPrincipal extends JFrame{
         lblStatus.setText("Buscando arquivo...");
         lblStatus.setForeground(Color.BLUE);
 
-        // Busca o PDF usando o PdfService.java
-        arquivo = PdfService.buscaPDF(codigo);
+        // Verifica se o codigo digitado é o codigo do desenho (começa com letra) ou o código de barras
+        if(Character.isDigit(codigo.charAt(0))){
+            System.out.println("Consultando codigo de barras: " + codigo);
+            lblStatus.setText("Consultando código de barras: ");
+            codigoDesenho = ApiConsumer.buscarDados(codigo);
+        }
+        else{
+            codigoDesenho = codigo;
+            lblStatus.setText("Consultando Desenho: ");
+        }
+        
+        // Se não encontrou o código do desenho pela API
+        if (codigoDesenho == null || codigoDesenho.isBlank()) {
+            lblStatus.setText("Desenho não encontrado para o código: " + codigo);
+        lblStatus.setForeground(Color.RED);
+            return;
+        }
+
+        // Busca o arquivo PDF físico na pasta com o nome do desenho garantido!
+        arquivo = PdfService.buscaPDF(codigoDesenho);
 
         if (arquivo == null) {
             lblStatus.setText("PDF não encontrado para o código: " + codigo);
@@ -160,7 +180,7 @@ public class TelaPrincipal extends JFrame{
             }
 
             // Atualiza os textos da tela
-            lblNomeArquivo.setText("Arquivo: " + arquivo.getName());
+            lblNomeArquivo.setText("Arquivo: " + arquivo.getName().toUpperCase());
             lblQtdTotal.setText("Bordas a passar: " + totalBordas);
 
             lblStatus.setText("Peça carregada com sucesso!");

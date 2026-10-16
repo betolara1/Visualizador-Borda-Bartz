@@ -2,6 +2,7 @@ package com.bartz;
 
 import javax.swing.SwingUtilities;
 
+import com.bartz.config.Db2Manager;
 import com.bartz.database.DbManager;
 import com.bartz.ui.TelaPrincipal;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -14,6 +15,8 @@ public class Main {
 
         // inicia o banco de dados
         DbManager.iniciarBanco();
+
+        Db2Manager.conexao();
 
         // 
         SwingUtilities.invokeLater(() -> {

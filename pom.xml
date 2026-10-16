@@ -39,5 +39,19 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.46.1.3</version>
         </dependency>
+
+        <!-- Driver JDBC oficial do IBM DB2 -->
+        <dependency>
+            <groupId>com.ibm.db2</groupId>
+            <artifactId>jcc</artifactId>
+            <version>11.5.8.0</version>
+        </dependency>
+
+        <!-- Leitor de variáveis do arquivo .env -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.2.0</version>
+        </dependency>
     </dependencies>
 </project>
